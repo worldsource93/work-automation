@@ -35,7 +35,7 @@ def upload_sld_to_geoserver(style_name, sld_file_path):
         auth=(GEOSERVER_USER, GEOSERVER_PASSWORD),
         timeout=60
       )
-    except request.RequestException as e:
+    except requests.RequestException as e:
         print(f"❌ GeoServer 연결 실패: {e}")
         return False
 
@@ -43,11 +43,16 @@ def upload_sld_to_geoserver(style_name, sld_file_path):
         print(f"🔁 {style_name} 스타일이 이미 존재함. 덮어쓰기 중...")
         # PUT: 기존 스타일 덮어쓰기
         put_url = f"{upload_url}/{style_name}"
-        response = requests.put
-            put_url, headers=headers, data=sld_data,
+        response = requests.put(
+            put_url,
+            headers=headers,
+            data=sld_data,
             auth=(GEOSERVER_USER, GEOSERVER_PASSWORD),
-            timeout=60
+            timeout=60,
         )
+    elif check_response.status_code in (401, 403):
+        print(f"❌ 인증/권한 오류: {check_response.status_code} - 업로드 중단")
+        return False
     else:
         print(f"➕ {style_name} 스타일 새로 업로드 중...")
         # POST: 새로운 스타일 생성
